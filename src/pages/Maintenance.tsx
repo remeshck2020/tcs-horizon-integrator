@@ -164,13 +164,13 @@ const Maintenance = () => {
                             {record.status === "error" && (
                               <Select 
                                 onValueChange={(value) => handleActionChange(record.id, value)}
-                                defaultValue=""
+                                defaultValue="select"
                               >
                                 <SelectTrigger className="w-32">
                                   <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Select</SelectItem>
+                                  <SelectItem value="select">Select</SelectItem>
                                   <SelectItem value="fix">Fix it</SelectItem>
                                   <SelectItem value="ignore">Ignore</SelectItem>
                                 </SelectContent>
