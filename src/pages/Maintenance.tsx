@@ -76,14 +76,33 @@ const Maintenance = () => {
       const result = await fileService.initiateTransformation(selectedIndexes);
       
       if (result.success) {
+        // Update status of fixed items
+        setStatusRecords(prev => 
+          prev.map(record => 
+            selectedIndexes.includes(record.id) 
+              ? { ...record, status: "success", action: "fixed" } 
+              : record
+          )
+        );
+        
+        // Update error summary counts
+        if (errorSummary) {
+          const fixedCount = selectedIndexes.length;
+          const updatedSummary = {
+            ...errorSummary,
+            errorRecords: errorSummary.errorRecords - fixedCount,
+            correctRecords: errorSummary.correctRecords + fixedCount
+          };
+          setErrorSummary(updatedSummary);
+        }
+        
         toast({
-          title: "Transformation Initiated",
+          title: "Transformation Completed",
           description: result.message
         });
-        // Refresh data
-        setShowFixOptions(false);
+        
+        // Clear selected indexes but keep showing the fixed items
         setSelectedIndexes([]);
-        setErrorSummary(fileService.getErrorRecordSummary());
       } else {
         toast({
           title: "Error",
