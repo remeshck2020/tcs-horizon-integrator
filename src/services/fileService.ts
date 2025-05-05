@@ -41,25 +41,27 @@ export const fileService = {
   },
   
   initiateTransformation: async (indexesToFix: number[]): Promise<{ success: boolean; message: string }> => {
-    // In a real app, this would make an API call to the Flask backend
+    // Making an actual API call to the Flask backend
     console.log("Sending indexes to fix:", indexesToFix);
     
     try {
-      // Simulate API call
-      // In production, replace with actual fetch request to your Flask API
-      // const response = await fetch('http://localhost:8000/process-files/', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ index_to_fix: indexesToFix }),
-      // });
-      // const data = await response.json();
+      // Real API call to the Flask backend
+      const response = await fetch('http://localhost:8000/process-files/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ index_to_fix: indexesToFix }),
+      });
       
-      // Mock successful response
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
       return { 
         success: true, 
-        message: "Files processed successfully" 
+        message: data.message || "Files processed successfully" 
       };
     } catch (error) {
       console.error("Error initiating transformation:", error);

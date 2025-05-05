@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -19,6 +18,7 @@ const Maintenance = () => {
   const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
   const [showFixOptions, setShowFixOptions] = useState(false);
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -35,17 +35,26 @@ const Maintenance = () => {
   const handleFixErrors = () => {
     setShowFixOptions(true);
     setStatusRecords(fileService.getStatusRecords());
+    // Clear previous selections when showing fix options
+    setSelectedIndexes([]);
   };
   
   const handleActionChange = (id: number, action: string) => {
+    // Update the action in statusRecords
     setStatusRecords(prev => 
       prev.map(record => 
         record.id === id ? { ...record, action } : record
       )
     );
     
+    // Update selectedIndexes based on action
     if (action === "fix") {
-      setSelectedIndexes(prev => [...prev, id]);
+      setSelectedIndexes(prev => {
+        if (!prev.includes(id)) {
+          return [...prev, id];
+        }
+        return prev;
+      });
     } else {
       setSelectedIndexes(prev => prev.filter(index => index !== id));
     }
@@ -61,23 +70,35 @@ const Maintenance = () => {
       return;
     }
     
-    const result = await fileService.initiateTransformation(selectedIndexes);
+    setIsLoading(true);
     
-    if (result.success) {
-      toast({
-        title: "Transformation Initiated",
-        description: result.message
-      });
-      // Refresh data
-      setShowFixOptions(false);
-      setSelectedIndexes([]);
-      setErrorSummary(fileService.getErrorRecordSummary());
-    } else {
+    try {
+      const result = await fileService.initiateTransformation(selectedIndexes);
+      
+      if (result.success) {
+        toast({
+          title: "Transformation Initiated",
+          description: result.message
+        });
+        // Refresh data
+        setShowFixOptions(false);
+        setSelectedIndexes([]);
+        setErrorSummary(fileService.getErrorRecordSummary());
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: result.message,
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -185,9 +206,9 @@ const Maintenance = () => {
                   <div className="mt-6 flex justify-end">
                     <Button 
                       onClick={handleInitiateTransformation}
-                      disabled={selectedIndexes.length === 0}
+                      disabled={selectedIndexes.length === 0 || isLoading}
                     >
-                      INITIATE TRANSFORMATION
+                      {isLoading ? "PROCESSING..." : "INITIATE TRANSFORMATION"}
                     </Button>
                   </div>
                 </CardContent>
